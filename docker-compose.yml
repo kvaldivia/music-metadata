@@ -9,6 +9,8 @@ services:
     build:
       context: .
       dockerfile: web-dockerfile
+    #working_dir: /go/src/music-metadata/
+    env_file: .env
     ports:
       - "8080:8080"
     restart: unless-stopped
@@ -18,6 +20,9 @@ services:
       - backend
     depends_on:
       - db
+    volumes:
+      - ".:/app"
+    entrypoint: ["sh", "/app/docker-entrypoint.sh"]
 
   db:
     image: postgres:15.5-alpine3.18
@@ -29,3 +34,8 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
+    networks:
+      - backend
+
+volumes:
+  web:

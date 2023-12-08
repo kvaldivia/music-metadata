@@ -1,12 +1,26 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var db = make(map[string]string)
+
+func setupDb() (*gorm.DB, error) {
+	dsn := "host=db user=music-metadata password=v9qsJRuw6e dbname=music-metadata sslmode=disable"
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println(db.Config)
+	}
+	return db, err
+}
 
 func setupRouter() *gin.Engine {
 	// Disable Console Color
@@ -68,6 +82,11 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+	_, err := setupDb()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	r := setupRouter()
 	// Listen and Server in 0.0.0.0:8080
 	r.Run(":8080")
