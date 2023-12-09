@@ -27,14 +27,14 @@ func setupRouter() *gin.Engine {
 	// gin.DisableConsoleColor()
 	r := gin.Default()
 
-	// Ping test
-	r.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
+	// Get track by ISRC
+	r.GET("/v1/track/:isrc", func(c *gin.Context) {
+
 	})
 
 	// Get user value
-	r.GET("/user/:name", func(c *gin.Context) {
-		user := c.Params.ByName("name")
+	r.GET("/v1/tracks/:artist", func(c *gin.Context) {
+		user := c.Params.ByName("artist")
 		value, ok := db[user]
 		if ok {
 			c.JSON(http.StatusOK, gin.H{"user": user, "value": value})
@@ -50,21 +50,12 @@ func setupRouter() *gin.Engine {
 	//	  "foo":  "bar",
 	//	  "manu": "123",
 	//}))
-	authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
+	authorized := r.Group("/v1/track", gin.BasicAuth(gin.Accounts{
 		"foo":  "bar", // user:foo password:bar
 		"manu": "123", // user:manu password:123
 	}))
 
-	/* example curl for /admin with basicauth header
-	   Zm9vOmJhcg== is base64("foo:bar")
-
-		curl -X POST \
-	  	http://localhost:8080/admin \
-	  	-H 'authorization: Basic Zm9vOmJhcg==' \
-	  	-H 'content-type: application/json' \
-	  	-d '{"value":"bar"}'
-	*/
-	authorized.POST("admin", func(c *gin.Context) {
+	authorized.POST("new", func(c *gin.Context) {
 		user := c.MustGet(gin.AuthUserKey).(string)
 
 		// Parse JSON
