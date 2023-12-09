@@ -9,7 +9,6 @@ services:
     build:
       context: .
       dockerfile: web-dockerfile
-    #working_dir: /go/src/music-metadata/
     env_file: .env
     ports:
       - "8080:8080"
