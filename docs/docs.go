@@ -30,7 +30,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "www.music-metadata.io",
-	BasePath:         "/v1",
+	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "MusicMetadata API",
 	Description:      "This is a music metadata api that enriches track details using spotify API.",

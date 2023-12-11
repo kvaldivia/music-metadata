@@ -16,6 +16,6 @@
         "version": "1.0"
     },
     "host": "www.music-metadata.io",
-    "basePath": "/v1",
+    "basePath": "/api/v1",
     "paths": {}
 }

@@ -5,10 +5,13 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	docs "github.com/kvaldivia/music-metadata/docs"
 	"github.com/kvaldivia/music-metadata/internal/controllers"
 	"github.com/kvaldivia/music-metadata/internal/services"
 	"github.com/kvaldivia/music-metadata/internal/store"
 	"github.com/kvaldivia/music-metadata/internal/tools/logger"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -39,7 +42,7 @@ func setupDb() (*gorm.DB, error) {
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host www.music-metadata.io
-// @BasePath /v1
+// @BasePath /api/v1
 func main() {
 	db, err := setupDb()
 	if err != nil {
@@ -56,12 +59,12 @@ func main() {
 	trackController := controllers.NewTracksController(&trackStore, &spotifyService)
 
 	// Get track by ISRC
-	r.GET("/v1/tracks/:isrc", func(c *gin.Context) {
+	r.GET("/api/v1/tracks/:isrc", func(c *gin.Context) {
 		trackController.GetTrackByISRC(c)
 	})
 
 	// Get user value
-	r.GET("/v1/artists/:artistId/tracks", func(c *gin.Context) {
+	r.GET("/api/v1/artists/:artistId/tracks", func(c *gin.Context) {
 		trackController.AllByArtist(c)
 	})
 
@@ -75,10 +78,13 @@ func main() {
 	//	var _ string = c.MustGet(gin.AuthUserKey).(string)
 	//	controllers.AddNewTrack(c, trackStore)
 	//})
-	r.POST("/v1/tracks", func(c *gin.Context) {
+	r.POST("/api/v1/tracks", func(c *gin.Context) {
 		trackController.AddNewTrack(c)
 	})
 
+	docs.SwaggerInfo.BasePath = "/api/v1"
+
+	r.GET("/swager/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	// Listen and Server in 0.0.0.0:8080
 	r.Run(":8080")
 }
