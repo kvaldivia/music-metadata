@@ -19,9 +19,9 @@ CREATE TABLE "tracks" (
   "isrc" text NULL,
   "image_uri" text NULL,
   "title" text NULL,
-  "artist_ref" bigint NULL,
+  "artist_id" bigint NULL,
   PRIMARY KEY ("id"),
-  CONSTRAINT "fk_artists_songs" FOREIGN KEY ("artist_ref") REFERENCES "artists" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION
+  CONSTRAINT "fk_artists_tracks" FOREIGN KEY ("artist_id") REFERENCES "artists" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 -- Create index "idx_tracks_deleted_at" to table: "tracks"
 CREATE INDEX "idx_tracks_deleted_at" ON "tracks" ("deleted_at");
