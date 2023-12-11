@@ -1,4 +1,17 @@
+basePath: /v1
+host: www.music-metadata.io
 info:
-  contact: {}
+  contact:
+    email: k_valdivia@gmx.com
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a music metadata api that enriches track details using spotify
+    API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: MusicMetadata API
+  version: "1.0"
 paths: {}
 swagger: "2.0"

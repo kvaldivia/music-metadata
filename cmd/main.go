@@ -26,6 +26,20 @@ func setupDb() (*gorm.DB, error) {
 	return db, err
 }
 
+// @title MusicMetadata API
+// @version 1.0
+// @description This is a music metadata api that enriches track details using spotify API.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email k_valdivia@gmx.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host www.music-metadata.io
+// @BasePath /v1
 func main() {
 	db, err := setupDb()
 	if err != nil {
