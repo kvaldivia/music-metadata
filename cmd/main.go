@@ -84,7 +84,7 @@ func main() {
 
 	docs.SwaggerInfo.BasePath = "/api/v1"
 
-	r.GET("/swager/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	// Listen and Server in 0.0.0.0:8080
 	r.Run(":8080")
 }

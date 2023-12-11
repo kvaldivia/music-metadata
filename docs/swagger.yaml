@@ -1,4 +1,40 @@
 basePath: /api/v1
+definitions:
+  controllers.JSONResult:
+    properties:
+      data: {}
+      message:
+        type: string
+    type: object
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  models.Track:
+    properties:
+      artistID:
+        type: integer
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      imageURI:
+        type: string
+      isrc:
+        type: string
+      spotifyID:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+    type: object
 host: www.music-metadata.io
 info:
   contact:
@@ -13,5 +49,122 @@ info:
   termsOfService: http://swagger.io/terms/
   title: MusicMetadata API
   version: "1.0"
-paths: {}
+paths:
+  /v1/artists/{artistId}/tracks:
+    get:
+      consumes:
+      - application/json
+      description: provides a list of the existing track records that belong to a
+        single existing artist
+      parameters:
+      - description: used to look for an artist record
+        in: path
+        name: artistId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: tracks list
+          schema:
+            allOf:
+            - $ref: '#/definitions/controllers.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Track'
+                  type: array
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/controllers.JSONResult'
+        "404":
+          description: not found
+          schema:
+            $ref: '#/definitions/controllers.JSONResult'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/controllers.JSONResult'
+      summary: list of existing tracks that belong to an artist
+      tags:
+      - v1
+  /v1/tracks:
+    post:
+      consumes:
+      - application/json
+      description: receives a spotify track id and fetches the track's info from spotify
+        api
+      parameters:
+      - description: used to look up car record
+        in: path
+        name: isrc
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: track details
+          schema:
+            allOf:
+            - $ref: '#/definitions/controllers.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Track'
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/controllers.JSONResult'
+        "409":
+          description: conflict
+          schema:
+            $ref: '#/definitions/controllers.JSONResult'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/controllers.JSONResult'
+      summary: request to add a new spotify track
+      tags:
+      - v1
+  /v1/tracks/{isrc}:
+    get:
+      description: returns the details for an existing track that matches the provided
+        isrc.
+      parameters:
+      - description: used to look up a track record
+        in: path
+        name: isrc
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: track details
+          schema:
+            allOf:
+            - $ref: '#/definitions/controllers.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Track'
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/controllers.JSONResult'
+        "404":
+          description: not found
+          schema:
+            $ref: '#/definitions/controllers.JSONResult'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/controllers.JSONResult'
+      summary: get matching track details, use isrc to match track
+      tags:
+      - v1
 swagger: "2.0"

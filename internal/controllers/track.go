@@ -14,11 +14,6 @@ import (
 
 var l = logger.GetLogger()
 
-type JSONResult struct {
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
-}
-
 type TracksController struct {
 	Store          store.Track
 	SpotifyService services.Service
@@ -38,13 +33,12 @@ func NewTracksController(st *store.Track, ss *services.Service) TracksController
 //	@Description	returns the details for an existing track that matches the provided isrc.
 //	@Tags			v1
 //	@Produce		json
-//	@Param			isrc param string true	"used to look up a track record"
-//	@Success		200		{object}	http.JSONResult{data=models.Track} "track details"
-//	@Failure		400		{object}	http.JSONResult "bad request"
-//	@Failure		404		{object}	http.JSONResult "not found"
-//	@Failure		500		{object}	http.JSONResult "internal error"
-//	@Router			/v1/tracks/:isrc [get]
-
+//	@Param			isrc path string true	"used to look up a track record"
+//	@Success		200		{object}	controllers.JSONResult{data=models.Track} "track details"
+//	@Failure		400		{object}	controllers.JSONResult "bad request"
+//	@Failure		404		{object}	controllers.JSONResult "not found"
+//	@Failure		500		{object}	controllers.JSONResult "internal error"
+//	@Router			/v1/tracks/{isrc} [get]
 func (t *TracksController) GetTrackByISRC(c *gin.Context) {
 	var params getTrackByISRCParams
 	var err error
@@ -94,11 +88,11 @@ type addNewTrackRequestBody struct {
 // @Tags  v1
 // @Accept  json
 // @Produce		json
-// @Param			id query		string true	"used to look up car record"
-// @Success		201 {object}	http.JSONResult{data=models.Track} "track details"
-// @Failure		400 {object}	http.JSONResult "bad request"
-// @Failure		409 {object}	http.JSONResult "conflict"
-// @Failure		500 {object}	http.JSONResult "internal error"
+// @Param			isrc path string true	"used to look up car record"
+// @Success		201 {object}	controllers.JSONResult{data=models.Track} "track details"
+// @Failure		400 {object}	controllers.JSONResult "bad request"
+// @Failure		409 {object}	controllers.JSONResult "conflict"
+// @Failure		500 {object}	controllers.JSONResult "internal error"
 // @Router			/v1/tracks [post]
 func (t *TracksController) AddNewTrack(c *gin.Context) {
 	var track *models.Track
@@ -159,16 +153,17 @@ type allByArtistUriParams struct {
 
 // AllByArtist godoc
 //
-//	@Summary		list of existing tracks that belong to an artist
-//	@Description	provides a list of the existing track records that belong to a single existing artist
-//	@Tags			v1
-//	@Accept			json
-//	@Produce	  json
-//	@Success		200		{object}	http.JSONResult{data=[]model.Track}	"tracks list"
-//	@Failure		400		{object}	http.JSONResult "bad request"
-//	@Failure		404		{object}	http.JSONResult "not found"
-//	@Failure		500		{object}	http.JSONResult "internal error"
-//	@Router			/v1/artists/:artistId/tracks [get]
+// @Summary		list of existing tracks that belong to an artist
+// @Description	provides a list of the existing track records that belong to a single existing artist
+// @Tags			v1
+// @Accept			json
+// @Produce	  json
+// @Param artistId path string true "used to look for an artist record"
+// @Success		200		{object}	controllers.JSONResult{data=[]models.Track}	"tracks list"
+// @Failure		400		{object}	controllers.JSONResult "bad request"
+// @Failure		404		{object}	controllers.JSONResult "not found"
+// @Failure		500		{object}	controllers.JSONResult "internal error"
+// @Router			/v1/artists/{artistId}/tracks [get]
 func (t *TracksController) AllByArtist(c *gin.Context) {
 	var err error
 	var params allByArtistUriParams
