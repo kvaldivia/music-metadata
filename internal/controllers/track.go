@@ -14,7 +14,12 @@ import (
 
 var l = logger.GetLogger()
 
-type tracksController struct {
+type JSONResult struct {
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
+type TracksController struct {
 	Store          store.Track
 	SpotifyService services.Service
 }
@@ -23,11 +28,24 @@ type getTrackByISRCParams struct {
 	ISRC string `uri:"isrc" binding:"required"`
 }
 
-func NewTracksController(st *store.Track, ss *services.Service) tracksController {
-	return tracksController{Store: *st, SpotifyService: *ss}
+func NewTracksController(st *store.Track, ss *services.Service) TracksController {
+	return TracksController{Store: *st, SpotifyService: *ss}
 }
 
-func (t *tracksController) GetTrackByISRC(c *gin.Context) {
+// GetTrackByISRC godoc
+//
+//	@Summary    get matching track details, use isrc to match track
+//	@Description	returns the details for an existing track that matches the provided isrc.
+//	@Tags			v1
+//	@Produce		json
+//	@Param			isrc param string true	"used to look up a track record"
+//	@Success		200		{object}	http.JSONResult{data=models.Track} "track details"
+//	@Failure		400		{object}	http.JSONResult "bad request"
+//	@Failure		404		{object}	http.JSONResult "not found"
+//	@Failure		500		{object}	http.JSONResult "internal error"
+//	@Router			/v1/tracks/:isrc [get]
+
+func (t *TracksController) GetTrackByISRC(c *gin.Context) {
 	var params getTrackByISRCParams
 	var err error
 
@@ -68,7 +86,21 @@ type addNewTrackRequestBody struct {
 	SpotifyID string `uri:"spotifyId"`
 }
 
-func (t *tracksController) AddNewTrack(c *gin.Context) {
+// AddNewTrack godoc
+//
+// @Summary    request to add a new spotify track
+//
+// @Description	receives a spotify track id and fetches the track's info from spotify api
+// @Tags  v1
+// @Accept  json
+// @Produce		json
+// @Param			id query		string true	"used to look up car record"
+// @Success		201 {object}	http.JSONResult{data=models.Track} "track details"
+// @Failure		400 {object}	http.JSONResult "bad request"
+// @Failure		409 {object}	http.JSONResult "conflict"
+// @Failure		500 {object}	http.JSONResult "internal error"
+// @Router			/v1/tracks [post]
+func (t *TracksController) AddNewTrack(c *gin.Context) {
 	var track *models.Track
 	var artist *models.Artist
 	var err error
@@ -114,7 +146,7 @@ func (t *tracksController) AddNewTrack(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, &track)
+		c.JSON(http.StatusCreated, &track)
 		return
 	}
 
@@ -125,7 +157,19 @@ type allByArtistUriParams struct {
 	ArtistID string `uri:"artistId" binding:"required"`
 }
 
-func (t *tracksController) AllByArtist(c *gin.Context) {
+// AllByArtist godoc
+//
+//	@Summary		list of existing tracks that belong to an artist
+//	@Description	provides a list of the existing track records that belong to a single existing artist
+//	@Tags			v1
+//	@Accept			json
+//	@Produce	  json
+//	@Success		200		{object}	http.JSONResult{data=[]model.Track}	"tracks list"
+//	@Failure		400		{object}	http.JSONResult "bad request"
+//	@Failure		404		{object}	http.JSONResult "not found"
+//	@Failure		500		{object}	http.JSONResult "internal error"
+//	@Router			/v1/artists/:artistId/tracks [get]
+func (t *TracksController) AllByArtist(c *gin.Context) {
 	var err error
 	var params allByArtistUriParams
 
