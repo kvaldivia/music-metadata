@@ -7,6 +7,6 @@ import (
 )
 
 type Service interface {
-	Get(ctx context.Context, id string) (*models.Track, error)
+	Get(ctx context.Context, id string) (*models.Track, *models.Artist, error)
 	Search(ctx context.Context, q string) ([]*models.Track, error)
 }

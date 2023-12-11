@@ -2,16 +2,18 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kvaldivia/music-metadata/internal/controllers"
 	"github.com/kvaldivia/music-metadata/internal/services"
 	"github.com/kvaldivia/music-metadata/internal/store"
+	"github.com/kvaldivia/music-metadata/internal/tools/logger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var db = make(map[string]string)
+var l = logger.GetLogger()
 
 func setupDb() (*gorm.DB, error) {
 	dsn := "host=db user=music-metadata password=v9qsJRuw6e dbname=music-metadata sslmode=disable"
@@ -27,14 +29,16 @@ func setupDb() (*gorm.DB, error) {
 func main() {
 	db, err := setupDb()
 	if err != nil {
-		log.Println(err)
+		l.Error("could not start db", "error", err.Error())
 		return
 	}
-	// Disable Console Color
-	// gin.DisableConsoleColor()
 	r := gin.Default()
 	trackStore := store.NewTrackStore(db)
-	spotifyService := services.NewSpotifyService("https://api.spotify.com/v1", "")
+	spotifyService, err := services.NewSpotifyService("https://api.spotify.com/v1", os.Getenv("SPOTIFY_CLIENT_ID"), os.Getenv("SPOTIFY_CLIENT_SECRET"))
+	if err != nil {
+		l.Error("could not start spotify service", "error", err.Error())
+		return
+	}
 	trackController := controllers.NewTracksController(&trackStore, &spotifyService)
 
 	// Get track by ISRC

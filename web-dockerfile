@@ -4,6 +4,6 @@ RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh curl
 
 RUN curl -sSf https://atlasgo.sh | sh
-RUN echo $(which atlas)
+RUN go install github.com/mitranim/gow@latest
 
 WORKDIR /app

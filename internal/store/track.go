@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 
 	"github.com/kvaldivia/music-metadata/internal/models"
 	"gorm.io/gorm"
@@ -10,8 +11,9 @@ import (
 type Track interface {
 	Record(ctx context.Context, tracks []*models.Track) error
 	Save(ctx context.Context, track *models.Track) error
+	Create(ctx context.Context, o interface{}) error
 	Find(ctx context.Context, isrc string) (*models.Track, error)
-	AllByArtist(ctx context.Context, artistName string) ([]*models.Track, error)
+	AllByArtist(ctx context.Context, artistId string) ([]*models.Track, error)
 	All(ctx context.Context) ([]*models.Track, error)
 }
 
@@ -33,6 +35,10 @@ func (t *track) Save(ctx context.Context, track *models.Track) error {
 	return t.db.WithContext(ctx).Save(track).Error
 }
 
+func (t *track) Create(ctx context.Context, o interface{}) error {
+	return t.db.WithContext(ctx).Create(o).Error
+}
+
 func (t *track) Find(ctx context.Context, isrc string) (*models.Track, error) {
 	var matchedTrack models.Track
 	err := t.db.WithContext(ctx).First(&matchedTrack, "isrc = ?", isrc).Error
@@ -40,17 +46,17 @@ func (t *track) Find(ctx context.Context, isrc string) (*models.Track, error) {
 }
 
 // TODO(kvaldivia): optimize with pagination
-func (t *track) AllByArtist(ctx context.Context, artistName string) ([]*models.Track, error) {
+func (t *track) AllByArtist(ctx context.Context, artistId string) ([]*models.Track, error) {
 	var tracks []*models.Track
-	var artist *models.Artist
+	var artist models.Artist
 	var err error
 
-	err = t.db.WithContext(ctx).First(artist, "name=?", artistName).Error
+	err = t.db.WithContext(ctx).First(&artist, "spotify_id=?", artistId).Error
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(errors.New("could not find a match for the artist"), err)
 	}
 
-	err = t.db.WithContext(ctx).InnerJoins("Artists").Find(tracks, "artist_ref=?", artist.ID).Error
+	err = t.db.WithContext(ctx).Find(&tracks, "artist_id=?", artist.ID).Error
 
 	return tracks, err
 }

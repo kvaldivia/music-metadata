@@ -9,7 +9,10 @@ import (
 	"github.com/kvaldivia/music-metadata/internal/models"
 	"github.com/kvaldivia/music-metadata/internal/services"
 	"github.com/kvaldivia/music-metadata/internal/store"
+	"github.com/kvaldivia/music-metadata/internal/tools/logger"
 )
+
+var l = logger.GetLogger()
 
 type tracksController struct {
 	Store          store.Track
@@ -67,6 +70,7 @@ type addNewTrackRequestBody struct {
 
 func (t *tracksController) AddNewTrack(c *gin.Context) {
 	var track *models.Track
+	var artist *models.Artist
 	var err error
 	var requestBody addNewTrackRequestBody
 	c.Header("Content-Type", "application/json")
@@ -86,12 +90,12 @@ func (t *tracksController) AddNewTrack(c *gin.Context) {
 	track, _ = t.Store.Find(c, requestBody.SpotifyID)
 
 	if track.SpotifyID == requestBody.SpotifyID {
-		c.JSON(http.StatusOK, &track)
+		c.JSON(http.StatusConflict, gin.H{"error": "A track with the same ID already exists."})
 		return
 	}
 
 	defer c.Done()
-	track, err = t.SpotifyService.Get(c, requestBody.SpotifyID)
+	track, artist, err = t.SpotifyService.Get(c, requestBody.SpotifyID)
 	if err != nil {
 		err = errors.Join(errors.New("could not get data from API"), err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -99,6 +103,17 @@ func (t *tracksController) AddNewTrack(c *gin.Context) {
 	}
 
 	if track.SpotifyID == requestBody.SpotifyID {
+		var elm interface{}
+		if artist != nil {
+			artist.Tracks = append(artist.Tracks, *track)
+			elm = artist
+		} else {
+			elm = track
+		}
+		if err = t.Store.Create(c, elm); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusOK, &track)
 		return
 	}
@@ -106,16 +121,29 @@ func (t *tracksController) AddNewTrack(c *gin.Context) {
 	c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "could not process correctly"})
 }
 
-func (t *tracksController) AllByArtist(c *gin.Context) {
-	artistName := c.Query("artistName")
-	c.Header("Content-Type", "application/json")
+type allByArtistUriParams struct {
+	ArtistID string `uri:"artistId" binding:"required"`
+}
 
-	if artistName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid artistName"})
+func (t *tracksController) AllByArtist(c *gin.Context) {
+	var err error
+	var params allByArtistUriParams
+
+	err = c.ShouldBindUri(&params)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	tracks, err := t.Store.AllByArtist(c, artistName)
+	c.Header("Content-Type", "application/json")
+
+	if params.ArtistID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid artist id"})
+		return
+	}
+
+	tracks, err := t.Store.AllByArtist(c, params.ArtistID)
 
 	if err != nil {
 		err = errors.Join(errors.New(""), err)

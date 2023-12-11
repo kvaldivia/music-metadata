@@ -5,8 +5,11 @@ CREATE TABLE "artists" (
   "updated_at" timestamptz NULL,
   "deleted_at" timestamptz NULL,
   "name" text NULL,
+  "spotify_id" text NULL,
   PRIMARY KEY ("id")
 );
+-- Create index "artists_spotify_id_key" to table: "artists"
+CREATE UNIQUE INDEX "artists_spotify_id_key" ON "artists" ("spotify_id");
 -- Create index "idx_artists_deleted_at" to table: "artists"
 CREATE INDEX "idx_artists_deleted_at" ON "artists" ("deleted_at");
 -- Create "tracks" table
