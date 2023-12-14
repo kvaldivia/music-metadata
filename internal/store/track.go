@@ -6,6 +6,7 @@ import (
 
 	"github.com/kvaldivia/music-metadata/internal/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Track interface {
@@ -36,12 +37,12 @@ func (t *track) Save(ctx context.Context, track *models.Track) error {
 }
 
 func (t *track) Create(ctx context.Context, o interface{}) error {
-	return t.db.WithContext(ctx).Create(o).Error
+	return t.db.Clauses(clause.OnConflict{DoNothing: true}).WithContext(ctx).Create(o).Error
 }
 
 func (t *track) Find(ctx context.Context, isrc string) (*models.Track, error) {
 	var matchedTrack models.Track
-	err := t.db.WithContext(ctx).First(&matchedTrack, "isrc = ?", isrc).Error
+	err := t.db.WithContext(ctx).First(&matchedTrack, "spotify_id = ?", isrc).Error
 	return &matchedTrack, err
 }
 

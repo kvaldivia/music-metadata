@@ -15,7 +15,8 @@ import (
 var l = logger.GetLogger()
 
 type TracksController struct {
-	Store          store.Track
+	TrackStore     store.Track
+	ArtistStore    store.Artist
 	SpotifyService services.Service
 }
 
@@ -23,8 +24,8 @@ type getTrackByISRCParams struct {
 	ISRC string `uri:"isrc" binding:"required"`
 }
 
-func NewTracksController(st *store.Track, ss *services.Service) TracksController {
-	return TracksController{Store: *st, SpotifyService: *ss}
+func NewTracksController(ts *store.Track, as *store.Artist, ss *services.Service) TracksController {
+	return TracksController{TrackStore: *ts, ArtistStore: *as, SpotifyService: *ss}
 }
 
 // GetTrackByISRC godoc
@@ -56,7 +57,7 @@ func (t *TracksController) GetTrackByISRC(c *gin.Context) {
 		return
 	}
 
-	track, err := t.Store.Find(c.Request.Context(), params.ISRC)
+	track, err := t.TrackStore.Find(c.Request.Context(), params.ISRC)
 
 	if err != nil {
 		err = errors.Join(errors.New("Could not query for the ISRC: "+params.ISRC), err)
@@ -113,7 +114,7 @@ func (t *TracksController) AddNewTrack(c *gin.Context) {
 		return
 	}
 
-	track, _ = t.Store.Find(c, requestBody.SpotifyID)
+	track, _ = t.TrackStore.Find(c, requestBody.SpotifyID)
 
 	if track.SpotifyID == requestBody.SpotifyID {
 		c.JSON(http.StatusConflict, gin.H{"error": "A track with the same ID already exists."})
@@ -121,24 +122,30 @@ func (t *TracksController) AddNewTrack(c *gin.Context) {
 	}
 
 	defer c.Done()
-	track, artist, err = t.SpotifyService.Get(c, requestBody.SpotifyID)
+	trackObj, artistObj, err := t.SpotifyService.Get(c, requestBody.SpotifyID)
 	if err != nil {
 		err = errors.Join(errors.New("could not get data from API"), err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	if track.SpotifyID == requestBody.SpotifyID {
-		var elm interface{}
-		if artist != nil {
-			artist.Tracks = append(artist.Tracks, *track)
-			elm = artist
+	if trackObj.SpotifyID == requestBody.SpotifyID {
+		artist, err = t.ArtistStore.Find(c, artistObj.SpotifyID)
+		l.Info("artis query result", "artist", artist, "error", err)
+		if err == nil {
+			l.Info("artist found for current track")
+			trackObj.ArtistID = artist.ID
+			if err = t.TrackStore.Create(c, trackObj); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
 		} else {
-			elm = track
-		}
-		if err = t.Store.Create(c, elm); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
+			artist.Tracks = append(artist.Tracks, *track)
+			l.Info("no artist found for current track")
+			if err = t.TrackStore.Create(c, artistObj); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
 		}
 		c.JSON(http.StatusCreated, &track)
 		return
@@ -182,7 +189,7 @@ func (t *TracksController) AllByArtist(c *gin.Context) {
 		return
 	}
 
-	tracks, err := t.Store.AllByArtist(c, params.ArtistID)
+	tracks, err := t.TrackStore.AllByArtist(c, params.ArtistID)
 
 	if err != nil {
 		err = errors.Join(errors.New(""), err)

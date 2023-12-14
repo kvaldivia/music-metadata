@@ -160,7 +160,7 @@ func (s *service) Get(ctx context.Context, id string) (*models.Track, *models.Ar
 	artist := models.Artist{
 		Tracks:    []models.Track{},
 		Name:      spotifyTrack.Artists[0].Name,
-		SpotifyID: spotifyTrack.ID,
+		SpotifyID: spotifyTrack.Artists[0].ID,
 	}
 
 	return &track, &artist, nil

@@ -51,12 +51,13 @@ func main() {
 	}
 	r := gin.Default()
 	trackStore := store.NewTrackStore(db)
+	artistStore := store.NewArtistStore(db)
 	spotifyService, err := services.NewSpotifyService("https://api.spotify.com/v1", os.Getenv("SPOTIFY_CLIENT_ID"), os.Getenv("SPOTIFY_CLIENT_SECRET"))
 	if err != nil {
 		l.Error("could not start spotify service", "error", err.Error())
 		return
 	}
-	trackController := controllers.NewTracksController(&trackStore, &spotifyService)
+	trackController := controllers.NewTracksController(&trackStore, &artistStore, &spotifyService)
 
 	// Get track by ISRC
 	r.GET("/api/v1/tracks/:isrc", func(c *gin.Context) {
